@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "5779B4CC-472D-4F5E-897B-7AF68989CAC0"
+            uuid = "48F9AEBE-F399-4374-B662-C64DC0945EA2"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "4DPlugin-Unicode-Normalize.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "91"
-            endingLineNumber = "91"
-            landmarkName = "Unicode_normalize(params)"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
+            landmarkName = "_ns(mode, src, dst)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
