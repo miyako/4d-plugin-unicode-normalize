@@ -4,3 +4,4 @@ unicode-normalize/test/userPreferences.*
 unicode-normalize/.vs/*
 unicode-normalize/Objs/*
 unicode-normalize/test/Project/DerivedData/*
+unicode-normalize/test/Data/*
