@@ -3,3 +3,4 @@ unicode-normalize/Unicode Normalize.xcodeproj/project.xcworkspace/*
 unicode-normalize/test/userPreferences.*
 unicode-normalize/.vs/*
 unicode-normalize/Objs/*
+unicode-normalize/test/Project/DerivedData/*
