@@ -36,12 +36,12 @@ void PluginMain(PA_long32 selector, PA_PluginParameters params) {
 #pragma mark -
 
 #if VERSIONWIN
-static _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
+static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
     
     int len = NormalizeString(
                               (NORM_FORM)mode,
-                              (LPCWSTR)_src.getUTF16StringPtr(),
-                              _src.getUTF16Length(),
+                              (LPCWSTR)src.getUTF16StringPtr(),
+                              src.getUTF16Length(),
                               NULL,
                               0
                               );
@@ -50,8 +50,8 @@ static _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
     
     len = NormalizeString(
                           (NORM_FORM)mode,
-                          (LPCWSTR)_src.getUTF16StringPtr(),
-                          _src.getUTF16Length(),
+                          (LPCWSTR)src.getUTF16StringPtr(),
+                          src.getUTF16Length(),
                           &buf[0],
                           buf.size()
                           );
