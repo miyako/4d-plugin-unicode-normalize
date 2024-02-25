@@ -1,0 +1,3 @@
+unicode-normalize/build/*
+unicode-normalize/Unicode Normalize.xcodeproj/project.xcworkspace/*
+unicode-normalize/test/userPreferences.*

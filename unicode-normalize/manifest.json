@@ -1,0 +1,11 @@
+{
+    "name": "Unicode Normalize",
+    "id": 20000,
+    "commands": [
+        {
+            "theme": "Unicode Normalize",
+            "syntax": "Unicode normalize(&T;&L):T",
+            "threadSafe": true
+        }
+    ]
+}
