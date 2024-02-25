@@ -22,10 +22,10 @@
 #endif
 
 typedef enum {
-    normalization_form_nfc = 0,
-    normalization_form_nfd = 1,
-    normalization_form_nfkc = 2,
-    normalization_form_nfkd = 3
+    normalization_form_nfc = 0x1,
+    normalization_form_nfd = 0x2,
+    normalization_form_nfkc = 0x5,
+    normalization_form_nfkd = 0x6
 } normalization_form_t;
 
 #pragma mark -

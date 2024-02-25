@@ -53,7 +53,7 @@ static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
     
     std::vector<wchar_t>buf(len);
     
-    NormalizeString(
+    len = NormalizeString(
                           (NORM_FORM)mode,
                           (LPCWSTR)src.getUTF16StringPtr(),
         src.getUTF16Length(), 
