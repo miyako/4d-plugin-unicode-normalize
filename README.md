@@ -10,5 +10,5 @@ NFC, NFD
 
 # References
 
-* [NormalizeString function (winnls.h)](https://learn.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-normalizestring)
+* [NormalizeString](https://learn.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-normalizestring)
 * [precomposedStringWithCanonicalMapping](https://developer.apple.com/documentation/foundation/nsstring/1412645-precomposedstringwithcanonicalma)
