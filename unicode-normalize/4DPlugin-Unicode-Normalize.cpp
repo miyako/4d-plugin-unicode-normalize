@@ -41,17 +41,17 @@ static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
     int len = NormalizeString(
                               (NORM_FORM)mode,
                               (LPCWSTR)src.getUTF16StringPtr(),
-                              src.getUTF16Length(),
+                              -1,
                               NULL,
                               0
                               );
     
     std::vector<wchar_t>buf(len+1);
     
-    len = NormalizeString(
+    NormalizeString(
                           (NORM_FORM)mode,
                           (LPCWSTR)src.getUTF16StringPtr(),
-                          src.getUTF16Length(),
+                          -1,
                           &buf[0],
                           buf.size()
                           );
