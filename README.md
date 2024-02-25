@@ -1,5 +1,12 @@
 NFC, NFD
 
+```4d
+$NFC:=Unicode normalize("Diplôme"; Normalization Form NFC)
+ASSERT(Length($NFC)=7)
+$NFD:=Unicode normalize("Diplôme"; Normalization Form NFD)
+ASSERT(Length($NFD)=8)
+```
+
 # Basics
 
 * The file system on macOS uses NFD normalisation
