@@ -45,7 +45,14 @@ static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
                               NULL,
                               0
                               );
-    if (len == 0) {
+    if (len <= 0) {
+        // NormalizeString returns 0 on failure, or the *negative* of the
+        // required buffer size when the probe call's zero-length destination
+        // is (as expected) insufficient. Either way, len<=0 here means we
+        // don't have a valid size yet -- fall back to the unmodified source
+        // rather than passing a negative int into std::vector's unsigned
+        // size parameter (which would attempt a near-SIZE_MAX allocation
+        // and throw, unhandled, all the way out to PluginMain's catch(...)).
         dst.setUTF16String(src.getUTF16StringPtr(), src.getUTF16Length());
             return;
     }
@@ -61,6 +68,13 @@ static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
         len
                           );
     
+    if (len <= 0) {
+        // Second call failed despite a correctly-sized buffer (defensive:
+        // avoids handing a bad length to dst.setUTF16String).
+        dst.setUTF16String(src.getUTF16StringPtr(), src.getUTF16Length());
+        return;
+    }
+    
     dst.setUTF16String((const PA_Unichar *)&buf[0], len);
 }
 #endif
@@ -68,28 +82,37 @@ static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
 #if VERSIONMAC
 static void _ns(normalization_form_t mode, C_TEXT& src, C_TEXT& dst) {
     
-    NSString *_src = src.copyUTF16String();
-    NSString *_dsc;
-    
-    switch (mode) {
-        case normalization_form_nfd:
-            _dsc= [_src decomposedStringWithCanonicalMapping];
-            break;
-        case normalization_form_nfc:
-            _dsc = [_src precomposedStringWithCompatibilityMapping];
-            break;
-        case normalization_form_nfkd:
-            _dsc = [_src decomposedStringWithCompatibilityMapping];
-            break;
-        case normalization_form_nfkc:
-        default:
-            _dsc = [_src precomposedStringWithCanonicalMapping];
-            break;
+    // Wrapped in @autoreleasepool because this command is marked
+    // threadSafe in manifest.json -- 4D may dispatch it on a worker
+    // thread that isn't guaranteed to have its own pool, and the
+    // NSString category methods below return autoreleased objects.
+    @autoreleasepool {
+        
+        NSString *_src = src.copyUTF16String();
+        NSString *_dsc;
+        
+        switch (mode) {
+            case normalization_form_nfd:
+                _dsc = [_src decomposedStringWithCanonicalMapping];
+                break;
+            case normalization_form_nfc:
+                // NFC = canonical decomposition + canonical composition.
+                _dsc = [_src precomposedStringWithCanonicalMapping];
+                break;
+            case normalization_form_nfkd:
+                _dsc = [_src decomposedStringWithCompatibilityMapping];
+                break;
+            case normalization_form_nfkc:
+            default:
+                // NFKC = compatibility decomposition + canonical composition.
+                _dsc = [_src precomposedStringWithCompatibilityMapping];
+                break;
+        }
+                
+        dst.setUTF16String(_dsc);
+        
+        [_src release];
     }
-            
-    dst.setUTF16String(_dsc);
-    
-    [_src release];
 }
 #endif
 
@@ -101,11 +124,23 @@ static void Unicode_normalize(PA_PluginParameters params) {
     C_TEXT src;
     C_TEXT dst;
     
-    src.fromParamAtIndex(pParams, 1);
-    
-    normalization_form_t mode = (normalization_form_t)PA_GetLongParameter(params, 2);
+    // manifest.json declares this command's return type (":T"), so
+    // PluginMain's outer catch(...) swallowing an exception here would
+    // leave the host waiting for a return that never comes (a hang, not
+    // just a silent failure). This local try/catch guarantees dst.setReturn
+    // still runs on any failure path, falling back to the unmodified source.
+    try
+    {
+        src.fromParamAtIndex(pParams, 1);
         
-    _ns(mode, src, dst);
+        normalization_form_t mode = (normalization_form_t)PA_GetLongParameter(params, 2);
+            
+        _ns(mode, src, dst);
+    }
+    catch(...)
+    {
+        dst.setUTF16String(src.getUTF16StringPtr(), src.getUTF16Length());
+    }
     
     dst.setReturn(pResult);
 }
