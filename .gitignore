@@ -5,3 +5,4 @@ unicode-normalize/.vs/*
 unicode-normalize/Objs/*
 unicode-normalize/test/Project/DerivedData/*
 unicode-normalize/test/Data/*
+build/XCBuildData/*
