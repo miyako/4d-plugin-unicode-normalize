@@ -109,3 +109,116 @@ If ($s1=$s2)
 	// same underlying text, different representation - shouldn't happen after NFC vs NFD
 End if
 ```
+
+## Manual versioning and publication
+
+The Actions workflows are independent:
+
+- **Bump version**: select a branch with GitHub's built-in ref selector and choose
+  `patch`, `minor`, or `major`. It checks out the immutable dispatch SHA, requires
+  that exact remote branch tip and a clean checkout, then makes one nonempty,
+  source-only, single-direct-parent commit with the Copilot co-author trailer.
+  An executable pre-push guard checks the server-advertised old SHA/ref, literal
+  new SHA, HEAD, parent and exactly one update (including rejecting an
+  already-up-to-date race). The guard is required initially and immediately before
+  a non-force push with both `push.followTags=false` and `--no-follow-tags`.
+  It never tags, releases, builds, or dispatches another workflow.
+- **Build**: select a branch or tag with the built-in ref selector. There are
+  **no custom inputs**. Every job checks out `github.sha`; validated source
+  metadata supplies the version and `vX.Y.Z` release name. A constant concurrency
+  group serializes publication across refs without cancellation. Bump is not a
+  prerequisite: Build can use any selected commit whose metadata validates and
+  whose version is still unpublished.
+
+### Source authority and intake repair
+
+The baseline is `3a4fb27331dd1fa58e7e7444e29978e29160c1d0` (`main`).
+Rename-follow Bump history starts at `7269b05`, whose header describes
+marketing-first/current-fallback behavior. The later `5bb7d68` header explicitly
+coordinates **MARKETING_VERSION, CURRENT_PROJECT_VERSION and Info.plist's
+CFBundleShortVersionString/CFBundleVersion**. That newer explicit contract
+governs, despite the old body's marketing-only bug. Independent build numbers
+from the earlier fallback contract are not the current policy.
+
+Intake does **not** increment `1.0.4`. All six marketing settings and the source
+plist already agree on `1.0.4`; only the six stale current settings (`1.0.2`) and
+source English display strings (`1.0.0`) are repaired to that existing authority.
+`Info.plist` itself remains unchanged. `CFBundleShortVersionString` is required;
+`CFBundleVersion` is optional and its absence is preserved. Supported
+`$(MARKETING_VERSION)`, `${MARKETING_VERSION}`, `$(CURRENT_PROJECT_VERSION)` and
+`${CURRENT_PROJECT_VERSION}` references are resolved and preserved; current
+settings may reference marketing, but cycles/unknown references fail.
+
+`.github/scripts/source_version.py` validates strict canonical `X.Y.Z`, drift,
+missing/duplicate settings and localized display metadata before any writes.
+Lexical project validation rejects quoted/unquoted inline duplicates, ignoring
+comments and string noise. Only literal version tokens are edited; UTF-8/UTF-16
+BOMs and endianness, individual mixed line endings, modes and unrelated bytes
+are preserved. Prebuilt bundle metadata/localization, dependencies, manifest and
+4D/schema counters are not version sources and are not changed by Bump.
+
+### Native build and create-only release
+
+The existing Windows Release/x64 build retains v143 and Windows SDK 10.0.
+Its exact `.vcxproj` OutDir is
+`test/plugins/Unicode Normalize.bundle/contents/windows64/Unicode Normalize.4DX`;
+only that nonempty output is normalized/uploaded, never a recursive first match.
+The macOS Default target retains `arm64 x86_64`, the workflow's 11.0 deployment
+override, frameworks, resource phases and signing secret names. Output is
+explicitly directed to `test/Plugins`, matching the actual `test/Project`
+layout (not a presumed `.4dbase`). Cleanup invalidates generated executable,
+plist, copied English strings, signatures and named intermediates, including
+their Default sibling locations, without deleting bundles, Windows binaries,
+resources or dependency directories.
+
+The rebuilt binary must contain the exact `arm64` and `x86_64` tokens, not
+`arm64e`/`x86_64h` substitutes. There is no new exact-slice-count or no-extra-slice
+restriction. Built plist and localized versions are checked against selected
+source, including XML/binary plist and UTF-16 strings. Signing retains deep
+strict verification. Both ZIP and DMG submissions must exit successfully and
+return JSON `Accepted`; stapling must then succeed.
+
+Before native work and again **after all build/sign/notary/staple gates**, an
+authenticated, fully paginated releases query checks every release, including
+drafts, and an exact remote-tag query requires absence. HTTP 404, authorization,
+network, malformed data and later-page failures all stop publication.
+Publication then uses a separate create-only `POST git/refs` at the selected SHA,
+verifies that exact remote SHA, and `POST`s a **new public, non-prerelease** release
+with explicit tag/name/target/body/flags. The original empty-body/no-generated-notes
+policy is retained. The exact ZIP and DMG are uploaded separately to the newly
+returned release ID. Nothing is reused, updated, clobbered, retried or rolled back;
+there is no combined create-with-assets operation.
+
+### Partial-publication recovery
+
+On failure, retain the Actions log, selected SHA, tag, returned release ID,
+notary submission IDs and any uploaded asset names. A failed HTTP response can
+also mean the server accepted a mutation before the response was lost: inspect
+remote state before taking any action. The workflow deliberately leaves a
+created tag, release and earlier assets intact as evidence, and a rerun of an
+occupied version fails closed.
+
+A maintainer must investigate and decide any manual recovery; this automation
+never deletes/repairs partial state or adopts an existing release. To publish
+another version, use Bump on the intended branch, then manually run Build on
+the resulting commit. Do not retry publication blindly or move a production tag.
+
+### Offline verification
+
+Run `actionlint` for **all** workflows and
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -v`.
+PowerShell (`pwsh`) is required, not skipped. Tests use source-derived fixtures,
+disposable local Git/bare origins, mocked API faults/races and literal extracted
+workflow Bash/PowerShell blocks with a closed PATH of native stubs. No real
+native build, signing, notarization, 4D, GitHub dispatch or production
+tag/release mutation is needed. The same full suite supports a genuinely
+guarded source-only bump in a disposable clone, without changing this branch's
+intake version.
+
+Reference adaptations were reviewed at the exact pinned commits:
+`miyako/4d-plugin-native-encoding-detection@c42ca565857f674bde5ea6ed3435c87375eda4a7`,
+`miyako/4d-plugin-file-information@19848973601acfd3a2b5070230fa40cdc7e4edb2`,
+`miyako/4d-plugin-common-string-algorithm@2606a68201866ec9fcbb38b51462d79215f504ef`,
+`miyako/4d-plugin-window-button@3f14facb9aaaaff0e22eeb8e07531163680c3a8a`,
+`miyako/4d-plugin-raw-picture-data@8144537fdc8dcc3d0c053dfe97aff0a8c0c3a6f9`,
+and `miyako/4d-plugin-PRNG@522f62e1e9f388be0f3f226c1d4c39362dad2491`.
