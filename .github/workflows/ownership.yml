@@ -1,0 +1,32 @@
+name: Ownership
+
+on:
+  push:
+    branches:
+      - miyako-unicode-normalize-ownership
+      - main
+    paths:
+      - '4D Plugin API/**'
+      - '4DPlugin-Unicode-Normalize.*'
+      - 'support/4DPlugin-JSON.*'
+      - '.github/tests/ownership*'
+      - '.github/tests/test_ownership.py'
+      - '.github/tests/test_repository_contract.py'
+      - '.github/workflows/ownership.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ownership:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Unsigned synthetic ownership host and preservation
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 .github/tests/test_ownership.py
+          python3 .github/tests/test_repository_contract.py

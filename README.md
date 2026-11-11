@@ -112,6 +112,11 @@ End if
 
 ## Manual versioning and publication
 
+Native helper ownership provenance, dormant-code findings, isolated unsigned
+regressions and explicit host/OOM limits are documented in the
+[native ownership audit](.github/tests/ownership-audit.md). These checks do not
+build, sign, package or release the plugin.
+
 The Actions workflows are independent:
 
 - **Bump version**: select a branch with GitHub's built-in ref selector and choose
